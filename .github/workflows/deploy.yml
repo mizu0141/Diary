@@ -1,26 +1,30 @@
-name: Deploy to AWS
+name: Deploy to AWS (OIDC)
 
 on:
   push:
     branches:
       - main
 
+permissions:
+  id-token: write # OIDCトークンを発行するために必要
+  contents: read # リポジトリの内容を読み込むために必要
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
+    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Configure AWS credentials
+      # OIDC認証を使用し、Secretsを使わずにIAMロールを引き受ける
+      - name: Configure AWS credentials (using OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          # --- ここが重要 ---
+          #代わりにIAMロールのARNを指定します
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ap-northeast-1
 
       - name: Sample AWS CLI command
         run: aws s3 ls
-
-
